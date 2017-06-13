@@ -39,6 +39,7 @@ sub new {
         preamble => '',
         releases => {},
         months   => \%months,
+        release_class => 'CPAN::Changes::Release',
         @_,
     }, $class;
 }
@@ -148,7 +149,7 @@ sub load_string {
             undef $n unless length $n;
 
             push @releases,
-                CPAN::Changes::Release->new(
+                $changes->build_release(
                 version      => $v,
                 date         => $d,
                 _parsed_date => $match,
@@ -259,7 +260,7 @@ sub add_release {
 
     for my $release ( @_ ) {
         my $new = Scalar::Util::blessed $release ? $release
-            : CPAN::Changes::Release->new( %$release );
+            : $self->build_release( %$release );
         $self->{ releases }->{ $new->version } = $new;
     }
 }
@@ -301,6 +302,12 @@ sub serialize {
     $output =~ s/\n\n+\z/\n/;
 
     return $output;
+}
+
+sub build_release {
+    my $self = shift;
+
+    return $self->{ release_class }->new( @_ );
 }
 
 1;
@@ -419,6 +426,10 @@ groups are sorted alphabetically.
 =head2 delete_empty_groups( )
 
 Deletes change groups without changes in all releases.
+
+=head2 build_release( )
+
+TODO
 
 =head1 DEALING WITH "NEXT VERSION" PLACEHOLDERS
 

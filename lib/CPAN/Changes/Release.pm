@@ -11,6 +11,7 @@ sub new {
     my $class = shift;
     return bless {
         changes => {},
+        group_class => 'CPAN::Changes::Group',
         @_,
     }, $class;
 }
@@ -101,10 +102,10 @@ sub get_group {
         $group = shift;
     }
     if ( !exists $self->{ changes }->{ $group } ) {
-        $self->{ changes }->{ $group } = CPAN::Changes::Group->new( name => $group );
+        $self->{ changes }->{ $group } = $self->build_group( name => $group );
     }
     if ( not blessed $self->{changes}->{$group} ) {
-       $self->{ changes }->{ $group } = CPAN::Changes::Group->new( name => $group , changes => $self->{changes}->{$group} );
+       $self->{ changes }->{ $group } = $self->build_group( name => $group , changes => $self->{changes}->{$group} );
     }
 
     return $self->{ changes }->{ $group };
@@ -129,7 +130,7 @@ sub group_values {
 
 sub add_group {
     my $self = shift;
-    $self->{ changes }->{ $_ } = CPAN::Changes::Group->new( name =>  $_ ) for @_;
+    $self->{ changes }->{ $_ } = $self->build_group( name =>  $_ ) for @_;
 }
 
 sub delete_group {
@@ -160,6 +161,12 @@ sub serialize {
     $output .= "\n";
 
     return $output;
+}
+
+sub build_group {
+    my $self = shift;
+
+    return $self->{ group_class }->new( @_ );
 }
 
 1;
@@ -279,6 +286,10 @@ as it is instead determined from C<< $group_object->name >>
 =head2 group_values( sort => \&sorting_function )
 
 Works like L</groups> but instead returns C<CPAN::Changes::Group> compatible objects.
+
+=head1 build_group( )
+
+TODO
 
 
 
